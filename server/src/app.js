@@ -1,13 +1,13 @@
 /**
  * ============================================================
- * EXPRESS APP — Production Hardened
+ * EXPRESS APP — Production Hardened (Express 5 Compatible)
  * ============================================================
  *
  * Security layers:
  * 1. Helmet — security headers (XSS, clickjacking, MIME sniffing)
  * 2. CORS — whitelist allowed origins
  * 3. Rate limiting — prevent brute force / DDoS
- * 4. Mongo sanitize — prevent NoSQL injection
+ * 4. Mongo sanitize — prevent NoSQL injection (custom, Express 5 compatible)
  * 5. Body size limit — prevent huge payloads
  *
  * ============================================================
@@ -17,29 +17,27 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import mongoSanitize from "express-mongo-sanitize";
 
 import authRoutes from "./routes/authRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import savedRoutes from "./routes/savedRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import { sanitizeMongo } from "./middleware/sanitize.js";
 
 const app = express();
 
 // ============================================================
 // 1. TRUST PROXY (for correct IP behind Render/Heroku/Netlify)
 // ============================================================
-app.set("trust proxy", 1);
+app.set("trust proxy", process.env.NODE_ENV === "production" ? 1 : false);
 
 // ============================================================
 // 2. SECURITY HEADERS
 // ============================================================
 app.use(
   helmet({
-    // Allow images/uploads to be served cross-origin
     crossOriginResourcePolicy: { policy: "cross-origin" },
-    // Disable CSP in dev (Vite needs inline scripts), enable in prod
     contentSecurityPolicy:
       process.env.NODE_ENV === "production" ? undefined : false,
   }),
@@ -80,9 +78,9 @@ app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
 // ============================================================
-// 5. MONGO SANITIZE — strip $ and . from user input
+// 5. MONGO SANITIZE — Express 5 compatible custom middleware
 // ============================================================
-app.use(mongoSanitize());
+app.use(sanitizeMongo);
 
 // ============================================================
 // 6. RATE LIMITING
@@ -109,7 +107,7 @@ const authLimiter = rateLimit({
     message:
       "Too many authentication attempts. Please try again in 15 minutes.",
   },
-  skipSuccessfulRequests: true, // Only count failed attempts
+  skipSuccessfulRequests: true,
 });
 
 // Upload limiter — 20 uploads per hour per IP

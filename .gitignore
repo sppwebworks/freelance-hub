@@ -1,0 +1,41 @@
+# ============ ENV FILES — NEVER COMMIT ============
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+!.env.example
+
+# ============ DEPENDENCIES ============
+node_modules
+.pnp
+.pnp.js
+
+# ============ BUILD ============
+dist
+build
+coverage
+
+# ============ UPLOADS ============
+uploads
+server/uploads
+
+# ============ LOGS ============
+logs
+*.log
+
+# ============ EDITOR / OS ============
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+
+# ============ CACHE ============
+.cache
+.temp
+.tmp
+
+# ============ DEPLOY ============
+.netlify
+.vercel
