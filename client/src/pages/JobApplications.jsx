@@ -81,18 +81,18 @@ const JobApplications = () => {
   );
 
   // Debug log
-  useEffect(() => {
-    if (job && user) {
-      console.log("🔍 JobApplications ownership:", {
-        jobTitle: job.title,
-        postedById,
-        currentUserId,
-        isOwner,
-        applicationsCount: applications.length,
-      });
-      setAuthChecked(true);
-    }
-  }, [job, user, postedById, currentUserId, isOwner, applications.length]);
+  // useEffect(() => {
+  //   if (job && user) {
+  //     console.log("🔍 JobApplications ownership:", {
+  //       jobTitle: job.title,
+  //       postedById,
+  //       currentUserId,
+  //       isOwner,
+  //       applicationsCount: applications.length,
+  //     });
+  //     setAuthChecked(true);
+  //   }
+  // }, [job, user, postedById, currentUserId, isOwner, applications.length]);
 
   // ------------------------------------------------------------
   // Handlers

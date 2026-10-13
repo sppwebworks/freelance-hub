@@ -95,17 +95,14 @@ export const getMyApplications = asyncHandler(async (req, res) => {
 
 // ============ GET RECEIVED APPLICATIONS (Client) ============
 export const getReceivedApplications = asyncHandler(async (req, res) => {
-  // Only clients can use this
   if (req.user.role !== "client") {
     res.status(403);
     throw new Error("Only clients can view received applications");
   }
 
-  // Get all jobs posted by this client
   const jobs = await Job.find({ postedBy: req.user._id }).select("_id title");
 
   if (jobs.length === 0) {
-    console.log(`📥 getReceivedApplications: ${req.user.name} has no jobs`);
     return res.json({ applications: [], totalJobs: 0, jobs: [] });
   }
 
@@ -115,17 +112,6 @@ export const getReceivedApplications = asyncHandler(async (req, res) => {
     .populate("applicant", "name email skills hourlyRate bio location")
     .populate("job", "title company budgetMin budgetMax status")
     .sort("-createdAt");
-
-  console.log(
-    `📥 getReceivedApplications: ${applications.length} apps across ${jobs.length} jobs for ${req.user.email}`,
-  );
-
-  if (applications.length > 0) {
-    console.log(
-      "📥 Sample applicant:",
-      JSON.stringify(applications[0].applicant, null, 2),
-    );
-  }
 
   res.json({
     applications,
@@ -151,14 +137,6 @@ export const getJobApplications = asyncHandler(async (req, res) => {
   const jobOwnerId = job.postedBy.toString();
   const requesterId = req.user._id.toString();
 
-  console.log("📥 getJobApplications:", {
-    jobId: job._id.toString(),
-    title: job.title,
-    jobOwnerId,
-    requesterId,
-    isOwner: jobOwnerId === requesterId,
-  });
-
   if (jobOwnerId !== requesterId) {
     res.status(403);
     throw new Error("Not authorized — you are not the job owner");
@@ -168,15 +146,6 @@ export const getJobApplications = asyncHandler(async (req, res) => {
     .populate("applicant", "name email skills hourlyRate bio location")
     .populate("job", "title company budgetMin budgetMax status")
     .sort("-createdAt");
-
-  console.log(`📥 Returning ${apps.length} applications`);
-
-  if (apps.length > 0) {
-    console.log(
-      "📥 Sample applicant:",
-      JSON.stringify(apps[0].applicant, null, 2),
-    );
-  }
 
   res.json(apps);
 });

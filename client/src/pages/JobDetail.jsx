@@ -1,13 +1,6 @@
 /**
  * ============================================================
- * JOB DETAIL PAGE — BULLETPROOF OWNERSHIP CHECK
- * ============================================================
- *
- * FIXES:
- * - Multi-fallback ID extraction (handles every backend shape)
- * - Explicit debug overlay (bottom-left) so you SEE the values
- * - Client always sees "View Applications" on own jobs
- * - Freelancer always sees "Apply Now" on others' jobs
+ * JOB DETAIL PAGE
  * ============================================================
  */
 
@@ -22,17 +15,10 @@ import {
 import { useToast } from "../context/ToastContext";
 import ApplyModal from "../components/jobs/ApplyModal";
 
-// ============================================================
-// ROBUST ID EXTRACTOR
-// Handles: string, ObjectId, populated object, populated _id
-// ============================================================
 const extractId = (val) => {
   if (!val) return "";
   if (typeof val === "string") return val;
-  if (typeof val === "number") return String(val);
-  // Mongoose ObjectId has .toString() → hex string
   if (val._id) return extractId(val._id);
-  if (val.id) return String(val.id);
   try {
     return String(val);
   } catch {
@@ -51,48 +37,11 @@ const JobDetail = () => {
 
   const [showApply, setShowApply] = useState(false);
 
-  // ------------------------------------------------------------
-  // Fetch job
-  // ------------------------------------------------------------
   useEffect(() => {
     dispatch(fetchJobById(id));
     return () => dispatch(clearCurrent());
   }, [id, dispatch]);
 
-  // ------------------------------------------------------------
-  // Ownership (multi-fallback)
-  // ------------------------------------------------------------
-  const postedById = extractId(job?.postedBy);
-  const currentUserId = extractId(user?._id);
-
-  const isOwner = Boolean(
-    user &&
-    token &&
-    postedById &&
-    currentUserId &&
-    postedById === currentUserId,
-  );
-
-  const isClient = user?.role === "client";
-  const isFreelancer = user?.role === "freelancer";
-  const canApply =
-    Boolean(token) && !isOwner && isFreelancer && job?.status !== "closed";
-
-  // ------------------------------------------------------------
-  // Debug overlay
-  // ------------------------------------------------------------
-  const debugInfo = {
-    postedById: postedById || "(none)",
-    currentUserId: currentUserId || "(none)",
-    isOwner,
-    role: user?.role || "GUEST",
-    applicants: job?.applicantsCount ?? "?",
-    match: postedById === currentUserId ? "✅" : "❌",
-  };
-
-  // ------------------------------------------------------------
-  // Loading
-  // ------------------------------------------------------------
   if (!job) {
     return (
       <div className="status">
@@ -102,9 +51,20 @@ const JobDetail = () => {
     );
   }
 
-  // ------------------------------------------------------------
-  // Formatters
-  // ------------------------------------------------------------
+  const postedById = extractId(job.postedBy);
+  const currentUserId = extractId(user?._id);
+  const isOwner = Boolean(
+    user &&
+    token &&
+    postedById &&
+    currentUserId &&
+    postedById === currentUserId,
+  );
+  const isClient = user?.role === "client";
+  const isFreelancer = user?.role === "freelancer";
+  const canApply =
+    Boolean(token) && !isOwner && isFreelancer && job.status !== "closed";
+
   const budgetText = () => {
     const min = job.budgetMin || 0;
     const max = job.budgetMax || 0;
@@ -113,9 +73,6 @@ const JobDetail = () => {
     return `$${min.toLocaleString()}-${max.toLocaleString()}`;
   };
 
-  // ------------------------------------------------------------
-  // Handlers
-  // ------------------------------------------------------------
   const handleSave = () => {
     if (!token) return navigate("/login");
     dispatch(toggleSaveJob(job._id))
@@ -132,45 +89,12 @@ const JobDetail = () => {
     setShowApply(true);
   };
 
-  // ------------------------------------------------------------
-  // Render
-  // ------------------------------------------------------------
   return (
     <div className="job-detail-page">
-      {/* ============ DEBUG OVERLAY (remove in production) ============ */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 10,
-          left: 10,
-          padding: "8px 12px",
-          background: "#000",
-          color: "#0f0",
-          fontSize: 11,
-          fontFamily: "monospace",
-          borderRadius: 6,
-          zIndex: 99999,
-          lineHeight: 1.6,
-          maxWidth: 400,
-          wordBreak: "break-all",
-        }}
-      >
-        <strong>🔍 DEBUG</strong>
-        <br />
-        postedById: {debugInfo.postedById}
-        <br />
-        currentUserId: {debugInfo.currentUserId}
-        <br />
-        match: {debugInfo.match} | isOwner: {String(debugInfo.isOwner)}
-        <br />
-        role: {debugInfo.role} | applicants: {debugInfo.applicants}
-      </div>
-
       <Link to="/" className="back-link">
         ← Back to jobs
       </Link>
 
-      {/* ============== HEADER ============== */}
       <div className="job-detail-header">
         <div className="job-company-logo large">
           {job.companyLogo ? (
@@ -196,7 +120,6 @@ const JobDetail = () => {
         </div>
       </div>
 
-      {/* ============== ACTIONS ============== */}
       <div className="job-detail-actions">
         {isOwner ? (
           <Link
@@ -224,18 +147,13 @@ const JobDetail = () => {
           >
             Login to Apply
           </button>
-        ) : (
-          <button className="btn-ghost btn-large" disabled>
-            Not available
-          </button>
-        )}
+        ) : null}
 
         <button className="btn-ghost btn-large" onClick={handleSave}>
           {job.isSaved ? "❤️ Saved" : "🤍 Save"}
         </button>
       </div>
 
-      {/* ============== DESCRIPTION ============== */}
       <section className="job-detail-section">
         <h2>Description</h2>
         <p style={{ whiteSpace: "pre-wrap" }}>
@@ -243,7 +161,6 @@ const JobDetail = () => {
         </p>
       </section>
 
-      {/* ============== SKILLS ============== */}
       {job.skills?.length > 0 && (
         <section className="job-detail-section">
           <h2>Required Skills</h2>
@@ -257,7 +174,6 @@ const JobDetail = () => {
         </section>
       )}
 
-      {/* ============== BUDGET ============== */}
       <section className="job-detail-section">
         <h2>Budget & Details</h2>
         <div className="job-detail-meta">

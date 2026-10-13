@@ -100,8 +100,7 @@ export const getFilterCounts = asyncHandler(async (req, res) => {
 });
 
 // ============================================================
-// GET MY JOBS (Client — all their posted jobs)
-// ⚠️ MUST be defined before /:id route matches
+// GET MY JOBS (Client only)
 // ============================================================
 export const getMyJobs = asyncHandler(async (req, res) => {
   if (req.user.role !== "client") {
@@ -111,7 +110,6 @@ export const getMyJobs = asyncHandler(async (req, res) => {
 
   const jobs = await Job.find({ postedBy: req.user._id }).sort("-createdAt");
 
-  // Attach pending application count to each job
   const jobsWithStats = await Promise.all(
     jobs.map(async (job) => {
       const pendingCount = await Application.countDocuments({
@@ -125,7 +123,6 @@ export const getMyJobs = asyncHandler(async (req, res) => {
     }),
   );
 
-  console.log(`📋 getMyJobs: ${jobs.length} jobs for ${req.user.email}`);
   res.json(jobsWithStats);
 });
 
@@ -151,19 +148,6 @@ export const getJobById = asyncHandler(async (req, res) => {
     }));
   }
 
-  // Debug log for ownership check
-  if (req.user) {
-    const ownerId =
-      job.postedBy?._id?.toString?.() || job.postedBy?.toString?.();
-    console.log("🔍 getJobById:", {
-      jobId: job._id.toString(),
-      title: job.title,
-      ownerId,
-      requesterId: req.user._id.toString(),
-      isOwner: ownerId === req.user._id.toString(),
-    });
-  }
-
   res.json({ ...job.toObject(), isSaved });
 });
 
@@ -176,7 +160,6 @@ export const createJob = asyncHandler(async (req, res) => {
     throw new Error("Only clients can post jobs");
   }
 
-  // Validate required fields
   const { title, description, company } = req.body;
   if (!title?.trim()) {
     res.status(400);

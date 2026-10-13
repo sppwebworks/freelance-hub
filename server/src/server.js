@@ -5,8 +5,12 @@ import jwt from "jsonwebtoken";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import { setIO } from "./config/socket.js";
+import { validateEnv } from "./config/validateEnv.js";
 
 const PORT = process.env.PORT || 5000;
+
+validateEnv();
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: process.env.CLIENT_URL, credentials: true },
@@ -26,11 +30,9 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  console.log(`🔌 Connected: ${socket.userId || "guest"}`);
   if (socket.userId) socket.join(`user:${socket.userId}`);
   socket.on("job:join", ({ jobId }) => socket.join(`job:${jobId}`));
   socket.on("job:leave", ({ jobId }) => socket.leave(`job:${jobId}`));
-  socket.on("disconnect", () => console.log(`🔌 Disconnected`));
 });
 
 setIO(io);
