@@ -1,0 +1,33 @@
+# Env files
+.env
+.env.local
+.env.development
+.env.development.local
+.env.production
+.env.production.local
+.env.*.local
+
+# Dependencies
+node_modules
+
+# Uploads (user files)
+uploads
+*.upload
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.sw?
+
+# Cache
+.cache
+.temp
+.tmp
